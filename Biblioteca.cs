@@ -34,6 +34,12 @@ public class Biblioteca {
         }
     }
 
+    public void MostrarCatalogo() {
+        foreach (var libro in Catalogo) {
+            Console.WriteLine($"Préstamos: {libro.PrestamosHistoricos} | Título: {libro.Nombre} | ISBN: {libro.ISBN}");
+        }
+    }
+
     public void BusquedaSecuencial(string tituloBuscado) {
         foreach (var libro in Catalogo) {
             if (libro.Nombre.ToLower() == tituloBuscado.ToLower()) {
@@ -62,7 +68,7 @@ public class Biblioteca {
             int comparacion = string.Compare(copiaOrdenada[medio].ISBN, isbnBuscado);
 
             if (comparacion == 0) {
-                Console.WriteLine($"[Binaria] Encontrado ISBN {isbnBuscado}: {copiaOrdenada[medio].Nombre} | Ejemplares: {copiaOrdenada[medio].CodigosEjemplares.Count}");
+                Console.WriteLine($"[Binaria] Encontrado ISBN {isbnBuscado}: {copiaOrdenada[medio].Nombre}");
                 return;
             } else if (comparacion < 0) {
                 inicio = medio + 1;
@@ -71,5 +77,25 @@ public class Biblioteca {
             }
         }
         Console.WriteLine($"[Binaria] ISBN '{isbnBuscado}' no encontrado.");
+    }
+}
+
+public class Program {
+    public static void Main() {
+        Biblioteca biblio = new Biblioteca();
+        
+        Console.WriteLine("--- CARGANDO DATOS ---");
+        biblio.CargarDatos();
+        
+        Console.WriteLine("\n--- CATÁLOGO ORDENADO POR PRÉSTAMOS ---");
+        biblio.OrdenarPorInsercion();
+        biblio.MostrarCatalogo();
+        
+        Console.WriteLine("\n--- PRUEBA DE ESCRITORIO: BÚSQUEDAS ---");
+        biblio.BusquedaSecuencial("1984");
+        biblio.BusquedaSecuencial("Libro Inexistente");
+        
+        biblio.BusquedaBinariaPorISBN("978-08");
+        biblio.BusquedaBinariaPorISBN("978-99");
     }
 }
