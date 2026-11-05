@@ -34,23 +34,8 @@ public class Biblioteca {
         }
     }
 
-    public void MostrarCatalogo() {
-        foreach (var libro in Catalogo) {
-            Console.WriteLine($"Préstamos: {libro.PrestamosHistoricos} | Título: {libro.Nombre} | ISBN: {libro.ISBN}");
-        }
-    }
-
-    public void BusquedaSecuencial(string tituloBuscado) {
-        foreach (var libro in Catalogo) {
-            if (libro.Nombre.ToLower() == tituloBuscado.ToLower()) {
-                Console.WriteLine($"[Secuencial] Encontrado: {libro.Nombre} | Ejemplares: {libro.CodigosEjemplares.Count}");
-                return;
-            }
-        }
-        Console.WriteLine($"[Secuencial] El libro '{tituloBuscado}' no fue encontrado.");
-    }
-
-    public void BusquedaBinariaPorISBN(string isbnBuscado) {
+    public void MedirBusquedasBinarias() {
+        // 1. Crear copia y ordenar por ISBN (Inserción)
         List<TituloLibro> copiaOrdenada = new List<TituloLibro>(Catalogo);
         for (int i = 1; i < copiaOrdenada.Count; i++) {
             TituloLibro actual = copiaOrdenada[i];
@@ -62,40 +47,51 @@ public class Biblioteca {
             copiaOrdenada[j + 1] = actual;
         }
 
-        int inicio = 0, fin = copiaOrdenada.Count - 1;
-        while (inicio <= fin) {
-            int medio = inicio + (fin - inicio) / 2;
-            int comparacion = string.Compare(copiaOrdenada[medio].ISBN, isbnBuscado);
-
-            if (comparacion == 0) {
-                Console.WriteLine($"[Binaria] Encontrado ISBN {isbnBuscado}: {copiaOrdenada[medio].Nombre}");
-                return;
-            } else if (comparacion < 0) {
-                inicio = medio + 1;
-            } else {
-                fin = medio - 1;
-            }
+        // 2. Preparar arreglo para Array.BinarySearch
+        string[] arrayISBNs = new string[copiaOrdenada.Count];
+        for(int i = 0; i < copiaOrdenada.Count; i++) {
+            arrayISBNs[i] = copiaOrdenada[i].ISBN;
         }
-        Console.WriteLine($"[Binaria] ISBN '{isbnBuscado}' no encontrado.");
+
+        // 3. Consultas de prueba (4 existentes, 1 inexistente)
+        string[] consultas = { "978-01", "978-05", "978-08", "978-04", "978-99" };
+
+        Console.WriteLine("\n--- TABLA DE COMPARACIONES (BÚSQUEDA BINARIA) ---");
+        Console.WriteLine("{0,-10} | {1,-22} | {2,-20}", "ISBN", "Comparaciones (Propia)", "Resultado Array.BinarySearch");
+        Console.WriteLine(new string('-', 60));
+
+        foreach (var isbn in consultas) {
+            int comparaciones = BusquedaBinariaPropiaConContador(copiaOrdenada, isbn);
+            
+            // Verificación con método nativo de C#
+            int indiceArray = Array.BinarySearch(arrayISBNs, isbn);
+            string resultadoNativo = indiceArray >= 0 ? "Encontrado" : "No encontrado";
+            
+            Console.WriteLine("{0,-10} | {1,-22} | {2,-20}", isbn, comparaciones, resultadoNativo);
+        }
+    }
+
+    private int BusquedaBinariaPropiaConContador(List<TituloLibro> lista, string isbnBuscado) {
+        int inicio = 0, fin = lista.Count - 1;
+        int contador = 0;
+        
+        while (inicio <= fin) {
+            contador++;
+            int medio = inicio + (fin - inicio) / 2;
+            int comparacion = string.Compare(lista[medio].ISBN, isbnBuscado);
+
+            if (comparacion == 0) return contador; // Encontrado
+            if (comparacion < 0) inicio = medio + 1;
+            else fin = medio - 1;
+        }
+        return contador; // No encontrado
     }
 }
 
 public class Program {
     public static void Main() {
         Biblioteca biblio = new Biblioteca();
-        
-        Console.WriteLine("--- CARGANDO DATOS ---");
         biblio.CargarDatos();
-        
-        Console.WriteLine("\n--- CATÁLOGO ORDENADO POR PRÉSTAMOS ---");
-        biblio.OrdenarPorInsercion();
-        biblio.MostrarCatalogo();
-        
-        Console.WriteLine("\n--- PRUEBA DE ESCRITORIO: BÚSQUEDAS ---");
-        biblio.BusquedaSecuencial("1984");
-        biblio.BusquedaSecuencial("Libro Inexistente");
-        
-        biblio.BusquedaBinariaPorISBN("978-08");
-        biblio.BusquedaBinariaPorISBN("978-99");
+        biblio.MedirBusquedasBinarias();
     }
 }
